@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene load_steps=9 format=3]
 
 [ext_resource type="Script" path="res://scripts/main.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/ui/agent_overlay.tscn" id="2"]
@@ -9,6 +9,9 @@ size = Vector2(40, 40)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ground"]
 albedo_color = Color(0.25, 0.28, 0.24, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_ground"]
+size = Vector3(40, 0.2, 40)
 
 [sub_resource type="CapsuleMesh" id="CapsuleMesh_boss"]
 radius = 1.5
@@ -34,6 +37,12 @@ current = true
 mesh = SubResource("PlaneMesh_ground")
 surface_material_override/0 = SubResource("StandardMaterial3D_ground")
 
+[node name="GroundBody" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="GroundBody"]
+position = Vector3(0, -0.1, 0)
+shape = SubResource("BoxShape3D_ground")
+
 [node name="BossMarker" type="MeshInstance3D" parent="."]
 position = Vector3(0, 2, 0)
 mesh = SubResource("CapsuleMesh_boss")
@@ -45,3 +54,12 @@ script = ExtResource("3")
 [node name="UI" type="CanvasLayer" parent="."]
 
 [node name="AgentOverlay" parent="UI" instance=ExtResource("2")]
+
+[node name="ControlsHint" type="Label" parent="UI"]
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 8.0
+offset_top = -32.0
+offset_right = 300.0
+offset_bottom = -8.0
+text = "WASD move   T taunt   F1 toggle overlay"

@@ -28,7 +28,11 @@ func _refresh() -> void:
 		child.queue_free()
 	for seat in runtime.seats:
 		var label := Label.new()
-		var marker := " [ACTIVE TANK]" if seat.active_tank else ""
+		var marker := ""
+		if seat.is_player:
+			marker += " [YOU]"
+		if seat.active_tank:
+			marker += " [ACTIVE TANK]"
 		var kit_name: String = seat.kit.display_name if seat.kit != null else "?"
 		var mechanic_name: String = seat.current_mechanic_id if seat.current_mechanic_id != "" else "-"
 		label.text = "#%d %s%s  hp=%d%%  mechanic=%s" % [

@@ -1,12 +1,14 @@
 class_name ArenaView
 extends Node3D
 
-## Minimal visual read-out of an EncounterRuntime: one capsule per seat,
+## Minimal visual read-out of an EncounterRuntime: one capsule per AI seat,
 ## arranged in a ring around the boss marker, color-coded by role, with the
 ## active tank's capsule scaled up and a brief flash on whichever seat a
 ## decision was just logged for. No positions/movement/animation beyond
 ## that — v1 shouldn't invest in visual fidelity before the base loop works
-## (CLAUDE.md).
+## (CLAUDE.md). The player's own seat (if any) is excluded from the ring —
+## they're represented by a real, player-moved PlayerCharacter instead (see
+## scripts/main.gd), starting at the same ring slot this would have used.
 
 const RING_RADIUS := 8.0
 const SEAT_RADIUS := 0.4
@@ -22,7 +24,13 @@ var runtime = null  # EncounterRuntime; untyped to avoid a script cross-referenc
 var _seat_meshes: Dictionary = {}  # seat index -> MeshInstance3D
 var _seat_materials: Dictionary = {}  # seat index -> StandardMaterial3D
 
-func build(rt) -> void:
+## Shared with scripts/main.gd so the player's starting position matches
+## exactly where their ring slot would otherwise have been drawn.
+static func ring_position(seat_index: int, seat_count: int) -> Vector3:
+	var angle := TAU * float(seat_index) / float(max(seat_count, 1))
+	return Vector3(cos(angle) * RING_RADIUS, SEAT_RADIUS * 1.5, sin(angle) * RING_RADIUS)
+
+func build(rt, exclude_seat_index: int = -1) -> void:
 	runtime = rt
 	for child in get_children():
 		child.queue_free()
@@ -31,6 +39,9 @@ func build(rt) -> void:
 
 	var count: int = runtime.seats.size()
 	for seat in runtime.seats:
+		if seat.index == exclude_seat_index:
+			continue
+
 		var capsule := CapsuleMesh.new()
 		capsule.radius = SEAT_RADIUS
 		capsule.height = SEAT_RADIUS * 3.0
@@ -41,9 +52,7 @@ func build(rt) -> void:
 		var mesh_instance := MeshInstance3D.new()
 		mesh_instance.mesh = capsule
 		mesh_instance.material_override = material
-
-		var angle := TAU * float(seat.index) / float(max(count, 1))
-		mesh_instance.position = Vector3(cos(angle) * RING_RADIUS, capsule.height * 0.5, sin(angle) * RING_RADIUS)
+		mesh_instance.position = ring_position(seat.index, count)
 
 		add_child(mesh_instance)
 		_seat_meshes[seat.index] = mesh_instance
