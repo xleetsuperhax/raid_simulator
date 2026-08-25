@@ -1,10 +1,16 @@
-class_name PlayerController
+class_name TankController
 extends CharacterBody3D
 
 ## Tank v1 controls: WASD moves in world space (no camera-relative rotation —
 ## the camera stays at a fixed offset behind the character, so world-space
 ## and "forward" line up), T taunts. Raw key polling rather than an input
 ## action map, matching the pattern already used for the overlay's F1 toggle.
+##
+## The WASD/camera-follow block below is duplicated in DpsExoticController
+## rather than factored into a shared base — with only two kits it's cheaper
+## to read as two small self-contained scripts. If a third kit needs the same
+## movement, that's the trigger to extract it (CLAUDE.md: no premature
+## abstraction).
 
 const MOVE_SPEED := 5.0
 const GRAVITY := 20.0

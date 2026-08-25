@@ -8,7 +8,12 @@ Design doc drafted (v0.1). First encounter spec (`docs/encounters/boss-01.md`) a
 
 A minimal mechanic-resolution runtime now drives boss-01 end to end with all seats AI-controlled (`godot-project/scripts/runtime/`), backing the three required debug tools: an agent state overlay (F1, `godot-project/scripts/ui/`), decision logging, and a headless dry-run (`godot-project/scripts/dry_run/dry_run_cli.gd` — run after any change touching encounter/agent logic). `scenes/main.tscn` now also renders a minimal 3D arena view (`godot-project/scripts/visual/arena_view.gd`) — boss marker plus a ring of role-colored seat markers, active tank visibly distinct.
 
-The **Tank** seat is now actually playable: `scenes/main.tscn` spawns a player-controlled character (`godot-project/scripts/player/`) at the Tank seat, WASD to move, T to taunt. Taunting is wired directly into the marked_for_ruin mechanic's resolution — miss the window and the mechanic genuinely fails (design doc §4's "player can wipe the raid through bad play," now real, not just written down). DPS-Exotic is next. Still no kit abilities/damage numbers beyond this one mechanic, and no camera-relative movement (WASD is world-space, since the follow camera doesn't rotate with input yet).
+Two of the five v1 seats are playable. Press **1** or **2** at launch to pick one:
+
+- **Tank** — WASD move, T taunt. Taunting is wired directly into the marked_for_ruin mechanic's resolution, so miss the window and the mechanic genuinely fails (design doc §4's "player can wipe the raid through bad play," now real, not just written down).
+- **DPS-Exotic** (design doc §3.4) — WASD move, R to start a rhythm minigame once its cooldown is up, SPACE to hit each of 5 beats. 4+ hits lands a big damage window; a passive low floor ticks regardless. Runs on the same clock as the boss's mechanic timers, so committing to the minigame while, say, a run-away mechanic is about to target you is a real trade-off — though that particular mechanic (Volatile Rupture) doesn't yet have a real fail state for a player-controlled target (flagged in code, not fixed yet).
+
+Still no kit resource/cooldown systems beyond these two specific mechanics, no camera-relative movement (WASD is world-space — the follow camera doesn't rotate with input), and no proper seat-select menu (it's a one-line keypress, fine for two kits, worth a real menu once there's a third).
 
 ## Structure
 
