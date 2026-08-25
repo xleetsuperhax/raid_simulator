@@ -94,6 +94,8 @@ enum Type { TIMER, ON_HIT, ON_MECHANIC_EVENT }
 
 Three trigger shapes cover all 4 boss-01 mechanics (timer, on-hit, chained-off-another-mechanic). Don't add a fourth until a boss actually needs one.
 
+`interval_seconds` is reused for `ON_HIT` as the attack cadence landing on the responder (e.g. marked_for_ruin's boss auto-attack every 1.5s) rather than adding a second field — TIMER and ON_HIT both just mean "this fires again every N seconds," they differ only in what's counted as the responder.
+
 ### 3.2 Responder
 
 ```gdscript
@@ -247,4 +249,10 @@ MechanicDefinition
 
 ## 8. Remaining Open Questions
 
-- **Where resolver scripts live / how `resolver_id` maps to a script** (e.g. a fixed lookup dictionary vs. a naming convention under `res://mechanics/resolvers/`) is an implementation detail for whoever writes the mechanic-resolution system, not fixed here.
+- None outstanding — §9 below records how the questions in this doc were actually settled during implementation.
+
+## 9. Implementation Notes (post-schema)
+
+- Resolver scripts live under `godot-project/scripts/runtime/resolvers/`, one script per `resolver_id`, all extending `MechanicResolver`. `EncounterRuntime._build_resolvers()` is the fixed lookup from `resolver_id` string to resolver instance — a plain `Dictionary` literal, not a naming-convention scan, since the resolver set only grows when a new mechanic archetype is needed.
+- `EncounterRuntime` (`godot-project/scripts/runtime/encounter_runtime.gd`) is the scheduler: it owns `seats: Array[SeatState]`, ticks `TIMER`/`ON_HIT` mechanics off a `timers` dictionary, and fires `ON_MECHANIC_EVENT` listeners synchronously off `"triggered"`/`"resolved"` events. `ResponderDefinition` resolution (role/whole-raid, selection, exclusion) is centralized in `EncounterRuntime.select_responders()` rather than duplicated per resolver.
+- Mechanic `.tres` resources are loaded once and cached by the engine; the runtime never mutates them directly — `_apply_tier()` deep-`duplicate()`s each `MechanicDefinition` per encounter run before applying tier overrides.

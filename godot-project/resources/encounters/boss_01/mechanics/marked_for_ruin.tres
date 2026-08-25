@@ -7,7 +7,7 @@
 [sub_resource type="Resource" id="SubResource_1"]
 script = ExtResource("2")
 type = 1
-interval_seconds = 0.0
+interval_seconds = 1.5
 offset_seconds = 0.0
 hit_target_responder = true
 source_mechanic_id = ""
