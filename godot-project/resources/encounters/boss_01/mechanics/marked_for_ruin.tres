@@ -1,0 +1,35 @@
+[gd_resource type="Resource" script_class="MechanicDefinition" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/mechanic_definition.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/trigger_definition.gd" id="2"]
+[ext_resource type="Script" path="res://scripts/data/responder_definition.gd" id="3"]
+
+[sub_resource type="Resource" id="SubResource_1"]
+script = ExtResource("2")
+type = 1
+interval_seconds = 0.0
+offset_seconds = 0.0
+hit_target_responder = true
+source_mechanic_id = ""
+source_event = ""
+
+[sub_resource type="Resource" id="SubResource_2"]
+script = ExtResource("3")
+mode = 0
+role_categories = Array[int]([0])
+selection = 0
+exclusion = 0
+
+[resource]
+script = ExtResource("1")
+id = "marked_for_ruin"
+display_name = "Marked for Ruin (Tank Swap)"
+trigger = SubResource("SubResource_1")
+responder = SubResource("SubResource_2")
+resolver_id = "stacking_swap"
+params = {
+"stack_threshold": 4,
+"decay_per_tick": 1,
+"decay_interval_seconds": 4
+}
+failure_consequence = "tank_lethal_spike"

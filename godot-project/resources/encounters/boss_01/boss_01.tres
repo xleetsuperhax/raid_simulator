@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="EncounterDefinition" load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/encounter_definition.gd" id="1"]
+[ext_resource type="Resource" path="res://resources/encounters/boss_01/raid_composition.tres" id="2"]
+[ext_resource type="Resource" path="res://resources/encounters/boss_01/mechanics/marked_for_ruin.tres" id="3"]
+[ext_resource type="Resource" path="res://resources/encounters/boss_01/mechanics/festering_wound.tres" id="4"]
+[ext_resource type="Resource" path="res://resources/encounters/boss_01/mechanics/overflowing_wrath_soak.tres" id="5"]
+[ext_resource type="Resource" path="res://resources/encounters/boss_01/mechanics/overflowing_wrath_routing.tres" id="6"]
+[ext_resource type="Resource" path="res://resources/encounters/boss_01/mechanics/volatile_rupture.tres" id="7"]
+[ext_resource type="Resource" path="res://resources/encounters/boss_01/difficulty_tiers/normal.tres" id="8"]
+
+[resource]
+script = ExtResource("1")
+id = "boss_01"
+display_name = "Kroll the Bulwark"
+composition = ExtResource("2")
+enrage_seconds = 360.0
+mechanics = Array[MechanicDefinition]([ExtResource("3"), ExtResource("4"), ExtResource("5"), ExtResource("6"), ExtResource("7")])
+tiers = Array[DifficultyTier]([ExtResource("8")])
