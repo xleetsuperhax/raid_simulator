@@ -16,8 +16,14 @@ var failures: Array = []  # [{time, mechanic_id, consequence}]
 var decision_log: DecisionLog
 var rng: RandomNumberGenerator
 var time: float = 0.0
+var player_seat_index: int = -1  # -1 means no seat is player-controlled (e.g. the headless dry-run)
 
-func setup(p_encounter: EncounterDefinition, tier_id: String = "", seed: int = 0) -> void:
+## player_kit_id, if non-empty, marks the seat holding that kit as player-
+## controlled (SeatState.is_player = true) instead of AI. Resolvers branch on
+## this — see StackingSwapResolver — everything else about that seat is
+## identical to an AI seat. Omitted entirely by the headless dry-run, so its
+## all-AI regression behavior is unchanged.
+func setup(p_encounter: EncounterDefinition, tier_id: String = "", seed: int = 0, player_kit_id: String = "") -> void:
 	encounter = p_encounter
 	rng = RandomNumberGenerator.new()
 	rng.seed = seed
@@ -26,10 +32,18 @@ func setup(p_encounter: EncounterDefinition, tier_id: String = "", seed: int = 0
 	last_instance = {}
 	timers = {}
 	time = 0.0
+	player_seat_index = -1
 
 	mechanics = _apply_tier(encounter, tier_id)
 	resolvers = _build_resolvers()
 	_build_seats()
+
+	if player_kit_id != "":
+		for seat in seats:
+			if seat.kit != null and seat.kit.id == player_kit_id:
+				seat.is_player = true
+				player_seat_index = seat.index
+				break
 
 	for m in mechanics:
 		if m.trigger.type != GameEnums.TriggerType.ON_MECHANIC_EVENT:
@@ -73,7 +87,57 @@ func fire_mechanic(mechanic: MechanicDefinition) -> bool:
 	else:
 		failures.append({"time": time, "mechanic_id": mechanic.id, "consequence": mechanic.failure_consequence})
 		decision_log.log(time, -1, mechanic.id, "resolution_failed", "failed:%s" % mechanic.failure_consequence)
+		_apply_failure_effect(instance)
 	return ok
+
+## Called by the player's controller when they press Taunt. Only meaningful
+## for a player-controlled off-tank — StackingSwapResolver stops auto-resolving
+## the swap once the eligible off-tank is a player seat, so this is the only
+## way that swap happens; not taking it before the stack threshold is a
+## genuine failure (tank_lethal_spike), same as an AI off-tank failing to
+## exist would be.
+func player_taunt(seat_index: int) -> bool:
+	if seat_index < 0 or seat_index >= seats.size():
+		return false
+	var mechanic: MechanicDefinition = _find_mechanic_by_resolver_id("stacking_swap")
+	if mechanic == null:
+		return false
+	var seat: SeatState = seats[seat_index]
+	if seat.role_category != GameEnums.RoleCategory.TANK or seat.active_tank:
+		return false
+	var current_active: SeatState = get_active_tank()
+	if current_active == null:
+		return false
+
+	var stacks_at_swap: int = int(current_active.stacks.get(mechanic.id, 0))
+	current_active.active_tank = false
+	current_active.stacks[mechanic.id] = 0
+	seat.active_tank = true
+	seat.current_mechanic_id = mechanic.id
+
+	var instance := MechanicInstance.new(mechanic, time)
+	instance.data["outgoing_tank_seat_index"] = current_active.index
+	instance.data["stacks_at_swap"] = stacks_at_swap
+	last_instance[mechanic.id] = instance
+
+	decision_log.log(time, seat.index, mechanic.id, "player_taunt_swap", "resolved")
+	_fire_event(mechanic.id, "resolved")
+	return true
+
+func _find_mechanic_by_resolver_id(resolver_id: String) -> MechanicDefinition:
+	for m in mechanics:
+		if m.resolver_id == resolver_id:
+			return m
+	return null
+
+## No real damage model yet (no kits implemented) — a failed mechanic just
+## zeroes the affected seat's hp_fraction as a visible stand-in for "this went
+## badly," so failing to act is never silently invisible. See boss-01.md §6.
+func _apply_failure_effect(instance: MechanicInstance) -> void:
+	var seat_idx = instance.data.get("hit_seat_index", instance.data.get("target_seat_index", -1))
+	if seat_idx == null or int(seat_idx) < 0:
+		return
+	seats[int(seat_idx)].hp_fraction = 0.0
 
 func select_responders(responder: ResponderDefinition) -> Array:
 	var pool: Array = []

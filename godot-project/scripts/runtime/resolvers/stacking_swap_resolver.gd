@@ -2,8 +2,12 @@ class_name StackingSwapResolver
 extends MechanicResolver
 
 ## resolver_id "stacking_swap" — e.g. marked_for_ruin. Stacks build on the
-## current active-role responder (the active tank); the AI off-responder
-## swaps in one hit before the stack threshold would be reached.
+## current active-role responder (the active tank); the off-responder swaps
+## in one hit before the stack threshold would be reached. If the off-tank is
+## player-controlled, this resolver does NOT auto-swap them — it only checks
+## whether EncounterRuntime.player_taunt() already happened. Design doc §4:
+## AI-controlled responders always resolve correctly; player-controlled ones
+## depend on real input.
 
 func on_trigger(mechanic: MechanicDefinition, runtime) -> MechanicInstance:
 	var instance := MechanicInstance.new(mechanic, runtime.time)
@@ -42,6 +46,13 @@ func resolve(instance: MechanicInstance, runtime) -> bool:
 	if off_tank == null:
 		instance.data["chain_event"] = false
 		return false
+
+	if off_tank.is_player:
+		# Nothing to auto-resolve — the player must call player_taunt()
+		# themselves. Not doing so before the next hit is a real failure,
+		# handled by the `stacks >= threshold` branch above on that hit.
+		instance.data["chain_event"] = false
+		return true
 
 	instance.data["outgoing_tank_seat_index"] = active_tank.index
 	instance.data["stacks_at_swap"] = stacks
