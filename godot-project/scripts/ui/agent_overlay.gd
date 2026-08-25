@@ -34,4 +34,6 @@ func _refresh() -> void:
 		label.text = "#%d %s%s  hp=%d%%  mechanic=%s" % [
 			seat.index, kit_name, marker, int(seat.hp_fraction * 100.0), mechanic_name,
 		]
+		label.clip_text = true
+		label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		seat_list.add_child(label)

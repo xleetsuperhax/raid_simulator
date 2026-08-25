@@ -1,8 +1,8 @@
 extends Node3D
 
-## Minimal placeholder scene: runs boss-01's encounter runtime in real time
-## purely so the agent overlay (F1) has something live to display. No
-## gameplay/camera/kits here yet — that's future scope.
+## Minimal placeholder scene: runs boss-01's encounter runtime in real time,
+## purely so the arena view and agent overlay (F1) have something live to
+## display. No gameplay/kits/player input here yet — that's future scope.
 
 var runtime: EncounterRuntime
 
@@ -11,10 +11,12 @@ func _ready() -> void:
 	runtime = EncounterRuntime.new()
 	runtime.setup(encounter, "normal", 0)
 
-	var overlay: Control = preload("res://scenes/ui/agent_overlay.tscn").instantiate()
-	add_child(overlay)
+	var overlay = $UI/AgentOverlay
 	overlay.bind(runtime)
 	overlay.visible = true
+
+	var arena: ArenaView = $ArenaView
+	arena.build(runtime)
 
 func _process(delta: float) -> void:
 	if runtime != null and not runtime.is_finished():
