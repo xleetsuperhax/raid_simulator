@@ -8,6 +8,7 @@ extends Node3D
 const TankCharacterScene := preload("res://scenes/player/tank_character.tscn")
 const DpsExoticCharacterScene := preload("res://scenes/player/dps_exotic_character.tscn")
 const DpsExoticHudScene := preload("res://scenes/ui/dps_exotic_hud.tscn")
+const RhythmLaneScene := preload("res://scenes/ui/rhythm_lane.tscn")
 
 var runtime: EncounterRuntime
 
@@ -56,7 +57,7 @@ func _start_encounter(player_kit_id: String) -> void:
 		player.position = start_position
 		player.bind(runtime, runtime.player_seat_index)
 	elif player_kit_id == "dps_exotic":
-		_controls_hint.text = "WASD move   R start minigame   SPACE hit beat   F1 toggle overlay"
+		_controls_hint.text = "WASD move   R start minigame   SPACE on the beat   F1 toggle overlay"
 		var player: DpsExoticController = DpsExoticCharacterScene.instantiate()
 		add_child(player)
 		player.position = start_position
@@ -64,3 +65,6 @@ func _start_encounter(player_kit_id: String) -> void:
 		var hud = DpsExoticHudScene.instantiate()
 		add_child(hud)
 		hud.bind(player)
+		var lane = RhythmLaneScene.instantiate()
+		add_child(lane)
+		lane.bind(player)

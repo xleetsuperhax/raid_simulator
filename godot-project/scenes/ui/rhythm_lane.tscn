@@ -1,0 +1,11 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/rhythm_lane.gd" id="1"]
+
+[node name="RhythmLane" type="Control"]
+offset_left = 40.0
+offset_top = 110.0
+offset_right = 120.0
+offset_bottom = 510.0
+mouse_filter = 2
+script = ExtResource("1")

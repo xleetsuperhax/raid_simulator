@@ -10,7 +10,9 @@ extends CharacterBody3D
 ## about to target you is a genuine split-attention trade-off.
 ##
 ## Controls: WASD move, R start the minigame once its cooldown is up,
-## SPACE hit each beat.
+## SPACE to hit each note as it reaches the hit zone (see RhythmLane for the
+## visual — notes fall from the top of the lane and arrive at the zone
+## exactly BEAT_INTERVAL apart, NOTE_TRAVEL_TIME after spawning).
 ##
 ## Known gap (flagged, not fixed here): FleeDetonationResolver still
 ## auto-resolves Volatile Rupture even when it targets this seat — the
@@ -25,6 +27,7 @@ const GRAVITY := 20.0
 
 const BEAT_COUNT := 5
 const BEAT_INTERVAL := 0.6
+const NOTE_TRAVEL_TIME := 1.2  # seconds a note takes to fall from spawn to the hit zone; read by RhythmLane
 const HIT_WINDOW := 0.18
 const SUCCESS_HITS_REQUIRED := 4
 const BIG_DAMAGE := 100.0
@@ -44,8 +47,16 @@ var beat_index: int = 0
 var beats_hit: int = 0
 var last_result: String = ""
 
+## Time since the minigame started (0 at the R press). RhythmLane reads this
+## plus beat_index/BEAT_INTERVAL/NOTE_TRAVEL_TIME to place falling notes.
+var sequence_timer: float = 0.0
+
+## Per-beat outcome: "" while pending, then "hit" or "miss" once that beat's
+## window closes. Read by RhythmLane to color notes; sized to BEAT_COUNT by
+## _start_minigame().
+var beat_results: Array = []
+
 var _passive_timer: float = 0.0
-var _beat_timer: float = 0.0
 var _beat_consumed: bool = false
 var _start_was_down := false
 var _hit_was_down := false
@@ -96,13 +107,18 @@ func _update_minigame(delta: float, start_down: bool, hit_down: bool) -> void:
 		if start_down and not _start_was_down and cooldown_remaining <= 0.0:
 			_start_minigame()
 	else:
-		_beat_timer += delta
+		sequence_timer += delta
+		var target_time: float = NOTE_TRAVEL_TIME + beat_index * BEAT_INTERVAL
+
 		if hit_just_pressed and not _beat_consumed:
-			if absf(_beat_timer - BEAT_INTERVAL) <= HIT_WINDOW:
+			if absf(sequence_timer - target_time) <= HIT_WINDOW:
 				beats_hit += 1
 				_beat_consumed = true
-		if _beat_timer >= BEAT_INTERVAL:
-			_beat_timer -= BEAT_INTERVAL
+				beat_results[beat_index] = "hit"
+
+		if sequence_timer >= target_time + HIT_WINDOW:
+			if beat_results[beat_index] == "":
+				beat_results[beat_index] = "miss"
 			beat_index += 1
 			_beat_consumed = false
 			if beat_index >= BEAT_COUNT:
@@ -115,9 +131,12 @@ func _start_minigame() -> void:
 	minigame_state = MinigameState.ACTIVE
 	beat_index = 0
 	beats_hit = 0
-	_beat_timer = 0.0
+	sequence_timer = 0.0
 	_beat_consumed = false
 	last_result = ""
+	beat_results = []
+	beat_results.resize(BEAT_COUNT)
+	beat_results.fill("")
 
 func _finish_minigame() -> void:
 	var success := beats_hit >= SUCCESS_HITS_REQUIRED
