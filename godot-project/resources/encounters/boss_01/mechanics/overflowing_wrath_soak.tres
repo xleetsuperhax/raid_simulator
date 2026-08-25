@@ -1,0 +1,33 @@
+[gd_resource type="Resource" script_class="MechanicDefinition" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/mechanic_definition.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/trigger_definition.gd" id="2"]
+[ext_resource type="Script" path="res://scripts/data/responder_definition.gd" id="3"]
+
+[sub_resource type="Resource" id="SubResource_1"]
+script = ExtResource("2")
+type = 0
+interval_seconds = 25.0
+offset_seconds = 0.0
+hit_target_responder = true
+source_mechanic_id = ""
+source_event = ""
+
+[sub_resource type="Resource" id="SubResource_2"]
+script = ExtResource("3")
+mode = 1
+role_categories = Array[int]([])
+selection = 0
+exclusion = 0
+
+[resource]
+script = ExtResource("1")
+id = "overflowing_wrath_soak"
+display_name = "Overflowing Wrath (Soak)"
+trigger = SubResource("SubResource_1")
+responder = SubResource("SubResource_2")
+resolver_id = "grouped_soak"
+params = {
+"group_size": 5
+}
+failure_consequence = "soak_group_damage"

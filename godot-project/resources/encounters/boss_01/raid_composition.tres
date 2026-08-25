@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="RaidComposition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/raid_composition.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+roster_size = 25
+kit_counts = {
+"tank": 1,
+"generic_tank": 1,
+"healer": 1,
+"generic_healer": 4,
+"dps_rotation": 1,
+"dps_exotic": 1,
+"support_puzzle": 1,
+"generic_dps": 15
+}

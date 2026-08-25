@@ -4,7 +4,7 @@ A solo-player raid boss simulator. Full design context in `docs/design/core-desi
 
 ## Status
 
-Pre-implementation. Design doc drafted (v0.1). Next: first encounter spec, then implementation of the vertical slice (1 boss, 5 character kits, 1 difficulty tier).
+Design doc drafted (v0.1). First encounter spec (`docs/encounters/boss-01.md`) and the encounter/mechanic data schema (`docs/architecture/encounter-data-schema.md`) are written. Godot project is scaffolded with the schema implemented as Resource classes (`godot-project/scripts/data/`) and boss-01's data authored (`godot-project/resources/`). Next: the mechanic-resolution runtime (resolvers), agent AI, and the required debug tooling (agent overlay, decision logging, headless dry-run).
 
 ## Structure
 
