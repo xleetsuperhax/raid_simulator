@@ -6,6 +6,10 @@ extends RefCounted
 ## whole-raid soak resolution).
 var entries: Array = []
 
+## Emitted alongside every entry so live viewers (e.g. the arena visualization)
+## can react without polling `entries`.
+signal logged(time: float, seat_index: int, mechanic_id: String, rule: String, outcome: String)
+
 func log(time: float, seat_index: int, mechanic_id: String, rule: String, outcome: String) -> void:
 	var entry := {
 		"time": time,
@@ -16,3 +20,4 @@ func log(time: float, seat_index: int, mechanic_id: String, rule: String, outcom
 	}
 	entries.append(entry)
 	print("[t=%.1fs] seat=%d mechanic=%s rule=%s -> %s" % [time, seat_index, mechanic_id, rule, outcome])
+	logged.emit(time, seat_index, mechanic_id, rule, outcome)
