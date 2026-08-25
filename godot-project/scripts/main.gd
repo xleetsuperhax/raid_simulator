@@ -1,31 +1,66 @@
 extends Node3D
 
-## Minimal placeholder scene: runs boss-01's encounter runtime in real time,
-## with the player occupying the Tank seat. No kit selection UI yet — Tank is
-## hardcoded here as the only playable seat so far (DPS-Exotic next).
+## Minimal placeholder scene: waits for the player to pick a seat (1: Tank,
+## 2: DPS-Exotic), then runs boss-01's encounter runtime in real time with
+## that seat player-controlled. No proper menu yet — this is a one-line
+## selection step, upgrade it once a third kit makes it worth building one.
 
-const PlayerCharacterScene := preload("res://scenes/player/player_character.tscn")
+const TankCharacterScene := preload("res://scenes/player/tank_character.tscn")
+const DpsExoticCharacterScene := preload("res://scenes/player/dps_exotic_character.tscn")
+const DpsExoticHudScene := preload("res://scenes/ui/dps_exotic_hud.tscn")
 
 var runtime: EncounterRuntime
 
+@onready var _selection_prompt: Label = $UI/SelectionPrompt
+@onready var _controls_hint: Label = $UI/ControlsHint
+@onready var _overlay = $UI/AgentOverlay
+@onready var _arena: ArenaView = $ArenaView
+
 func _ready() -> void:
-	var encounter: EncounterDefinition = load("res://resources/encounters/boss_01/boss_01.tres")
-	runtime = EncounterRuntime.new()
-	runtime.setup(encounter, "normal", 0, "tank")
-
-	var overlay = $UI/AgentOverlay
-	overlay.bind(runtime)
-	overlay.visible = true
-
-	var arena: ArenaView = $ArenaView
-	arena.build(runtime, runtime.player_seat_index)
-
-	if runtime.player_seat_index >= 0:
-		var player: PlayerController = PlayerCharacterScene.instantiate()
-		add_child(player)
-		player.position = ArenaView.ring_position(runtime.player_seat_index, runtime.seats.size())
-		player.bind(runtime, runtime.player_seat_index)
+	_overlay.visible = false
 
 func _process(delta: float) -> void:
-	if runtime != null and not runtime.is_finished():
+	if runtime == null:
+		_handle_selection()
+		return
+	if not runtime.is_finished():
 		runtime.advance(delta)
+
+func _handle_selection() -> void:
+	if Input.is_physical_key_pressed(KEY_1):
+		_start_encounter("tank")
+	elif Input.is_physical_key_pressed(KEY_2):
+		_start_encounter("dps_exotic")
+
+func _start_encounter(player_kit_id: String) -> void:
+	_selection_prompt.visible = false
+
+	var encounter: EncounterDefinition = load("res://resources/encounters/boss_01/boss_01.tres")
+	runtime = EncounterRuntime.new()
+	runtime.setup(encounter, "normal", 0, player_kit_id)
+
+	_overlay.bind(runtime)
+	_overlay.visible = true
+
+	_arena.build(runtime, runtime.player_seat_index)
+
+	if runtime.player_seat_index < 0:
+		return
+
+	var start_position: Vector3 = ArenaView.ring_position(runtime.player_seat_index, runtime.seats.size())
+
+	if player_kit_id == "tank":
+		_controls_hint.text = "WASD move   T taunt   F1 toggle overlay"
+		var player: TankController = TankCharacterScene.instantiate()
+		add_child(player)
+		player.position = start_position
+		player.bind(runtime, runtime.player_seat_index)
+	elif player_kit_id == "dps_exotic":
+		_controls_hint.text = "WASD move   R start minigame   SPACE hit beat   F1 toggle overlay"
+		var player: DpsExoticController = DpsExoticCharacterScene.instantiate()
+		add_child(player)
+		player.position = start_position
+		player.bind(runtime, runtime.player_seat_index)
+		var hud = DpsExoticHudScene.instantiate()
+		add_child(hud)
+		hud.bind(player)
